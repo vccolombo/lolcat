@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math"
 	"os"
@@ -24,18 +26,18 @@ func readFile(path string) (string, error) {
 	return string(content), nil
 }
 
-func printRainbowByte(c byte, rainbowSeed int) {
+func printRainbowChar(c rune, rainbowSeed int) {
 	r, g, b := rgb(rainbowSeed)
 	fmt.Printf("\033[38;2;%d;%d;%dm%c\033[0m", r, g, b, c)
 }
 
 func displayContents(content string) {
 	for i := 0; i < len(content); i++ {
-		printRainbowByte(content[i], i)
+		printRainbowChar(rune(content[i]), i)
 	}
 }
 
-func main() {
+func runWithFiles() {
 	nArgs := len(os.Args)
 	if nArgs <= 1 {
 		fmt.Printf("usage: %s [filename1] [filename2] [...]\n", os.Args[0])
@@ -50,5 +52,28 @@ func main() {
 		}
 
 		displayContents(content)
+	}
+}
+
+func runWithPipe() {
+	reader := bufio.NewReader(os.Stdin)
+	i := 0
+	for {
+		input, _, err := reader.ReadRune()
+		if err != nil && err == io.EOF {
+			break
+		}
+		printRainbowChar(input, i)
+		i += 1
+	}
+}
+
+func main() {
+	info, _ := os.Stdin.Stat()
+
+	if info.Mode()&os.ModeCharDevice != 0 {
+		runWithFiles()
+	} else {
+		runWithPipe()
 	}
 }
