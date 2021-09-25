@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"path/filepath"
 )
 
 func rgb(i int) (int, int, int) {
@@ -55,6 +56,24 @@ func displayChunksFromFile(path string) {
 	}
 }
 
+func expandPath(path string) (string, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
+}
+
+func runOneFile(path string) {
+	expandedPath, err := expandPath(path)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	displayChunksFromFile(expandedPath)
+}
+
 func runWithFiles() {
 	nArgs := len(os.Args)
 	if nArgs <= 1 {
@@ -62,8 +81,8 @@ func runWithFiles() {
 		os.Exit(1)
 	}
 
-	for _, file := range os.Args[1:] {
-		displayChunksFromFile(file)
+	for _, path := range os.Args[1:] {
+		runOneFile(path)
 	}
 }
 
